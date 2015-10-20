@@ -1,6 +1,7 @@
 def pytest_configure():
     from django.conf import settings
 
+    print("configuring settings")
     settings.configure(
         DEBUG_PROPAGATE_EXCEPTIONS=True,
         DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3',
