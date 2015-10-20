@@ -33,21 +33,8 @@ env:
   - TOX_ENV=py34-django1.8-drf3.1
   - TOX_ENV=py34-django1.8-drf3.2
 
-matrix:
-  fast_finish: true
-
 install:
   - pip install tox
 
 script:
   - tox -e $TOX_ENV
-
-deploy:
-  provider: pypi
-  user: mrhwick
-  password:
-    secure: LrnwjgSA6a+IVYVSWU5s7QbqtlHC5aME9fX9bIw2CsBpeydXR8qd2TgerrwYZFtVWc9cqZyvs43uNQJL2Za+tK5Bk5L+c9ds1xs/ZikVa6HQp1AKARDSOLIEkZwsxVWvbLPrrGqanCelX8fAoKIk/G0DCRncgMKRDRhtIL7G62q1Sijsz7BoT/v81Byw/LdPd/qXU+doAr9dJKSm0DNMUmwSyj2Za0oI1vJefc75m+u9WIg/gxc2ngVSI2EpjKU8z5TtKVxxO+/CpiYsxSEBsy0Lcptq+6a6oMMfKMFN6KvIOMUCpGDoWB370xlQX/QDRwYrUfTsguPtLux18ClyIMwDKanr12YUghO4HLRyyeukl8Eh2C2WRx/10Onax0J1xHFIKUXs9kkXlS4IjDREn5CEWvgi+tZ2GzSUeX4d+xqBPunNmzELCJ8+dob4oSnxa7rArzqbMvGHcFjTyo0OTvNgAMB5+4XRIObQ0tNX9fnKfRSHlwsWm6ioQxtStsG71FxVFU0PP99tBwz+I81Vw0D8GXyL3uVfCW/hLsMaO9wsJEZK8ZlFdwJFFL/3GImJB1dZkK8BSqtfRoZ0LZ6rs2O9iSHfRQIobR545XV34U3Y9vwtKXOe4mvvz+IQAqO9vICKwkVEEklRVfBHJ7SV1emRSFwSGeUccRetxstzSd4=
-  on:
-    branch: master
-    tags: true
-    repo: mrhwick/django-rest-framework-version-transforms
