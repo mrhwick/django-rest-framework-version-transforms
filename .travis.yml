@@ -38,14 +38,3 @@ install:
 
 script:
   - tox -e $TOX_ENV
-
-deploy:
-  provider: pypi
-  user: mrhwick
-  password:
-    secure: xltvU7ZCopX+rUF9AKK81tkFhaD7IEGy+zf4IP94WV1j2EKjevZT+nEmeUqK8CjkdRmqu23KJWIeVuePw5Yf0WkRFsw8JCqkPLvIaVW4RtL1qmkcVCbc9tPntJ40PaOBIBRnCdTxv8cblPwO4U+oHKiefjROxMc9M8SSWl/Tnp4rgZa+314qivt47YVUwL4cREJ5PKNq9JGeoFPhVlcevZjPiQgJaEojEvm5oXAQeOeEowpL+s+EvKU8uXwIygViolwfwA8trSE9/sZBY86y48RaJdrGKAb5JZFcOueaYUQX3DykoqVtV9pivuKsiMdqfz+9mV9uOGQ6CCjnH/y2X8Rls3zGW5OhtZJkjRWjsOxE0e0Cr7dwqF06a7OwULfTZCJ7hPNEMLZL7M75ftSDVm+Y6Q1jbjyJLMn1KhKI5qnmBeVRHbvhDuElPCngJPcty6RHb8XE9U84gun7tyoU/hMhAYShbuv+HtNTGyVseb+A7dw6mGKz2tDaLXZI9Fe6/vuDi1RDiAibsWQ5Hj2XMPF+81Es0+wKLTkMBd1UOqqer3rdyy+uYocy+QlReuj+nqdkzwto9Fjq6z/BQz9MdgaUBGpXAa5tjgxJdDjcm8Dfaq8CV8MT+iCKZAwript1XDT09ZK1x7yXwH1k8xoUOO6XFVvW5BDbeMgTouFBrsM=
-  distributions: "sdist bdist_wheel"
-  on:
-    branch: master
-    tags: true
-    repo: mrhwick/django-rest-framework-version-transforms
