@@ -2,6 +2,8 @@ djangorestframework-version-transforms
 ======================================
 
 |build-status-image| |pypi-version|
+[![build-status-image](https://secure.travis-ci.org/mrhwick/django-rest-framework-version-transforms.svg?branch=master)](http://travis-ci.org/mrhwick/django-rest-framework-version-transforms?branch=master)
+[![pypi-version](https://img.shields.io/pypi/v/djangorestframework-version-transforms.svg)](https://pypi.python.org/pypi/djangorestframework-version-transforms)
 
 Overview
 --------
@@ -18,11 +20,11 @@ Requirements
 Installation
 ------------
 
-Install using ``pip``\ …
+Install using ```pip```...
 
-.. code:: bash
-
+```bash
     $ pip install djangorestframework-version-transforms
+```
 
 Example
 -------
@@ -34,49 +36,41 @@ Testing
 
 Install testing requirements.
 
-.. code:: bash
-
+```bash
     $ pip install -r requirements.txt
+```
 
 Run with runtests.
 
-.. code:: bash
-
+```bash
     $ ./runtests.py
+```
 
-You can also use the excellent `tox`_ testing tool to run the tests
-against all supported versions of Python and Django. Install tox
-globally, and then simply run:
+You can also use the excellent [tox](http://tox.readthedocs.org/en/latest/) testing tool to run the tests
+against all supported versions of Python and Django. Install tox globally, and then simply run:
 
-.. code:: bash
-
+```bash
     $ tox
+```
 
 Documentation
 -------------
 
-To build the documentation, you’ll need to install ``mkdocs``.
+To build the documentation, you’ll need to install ```mkdocs```.
 
-.. code:: bash
-
+```bash
     $ pip install mkdocs
+```
 
 To preview the documentation:
 
-.. code:: bash
-
+```bash
     $ mkdocs serve
     Running at: http://127.0.0.1:8000/
+```
 
 To build the documentation:
 
-.. code:: bash
-
-    $ mkdocs build
-
-.. _tox: http://tox.readthedocs.org/en/latest/
-
-.. |build-status-image| image:: https://secure.travis-ci.org/mrhwick/django-rest-framework-version-transforms.svg?branch=master
-   :target: http://travis-ci.org/mrhwick/django-rest-framework-version-transforms?branch=master
-.. |pypi-version| image:: https://img.shields.io/pypi/v/djangorestframework-version-transforms.svg
-   :target: https://pypi.python.org/pypi/djangorestframework-version-transforms
+```bash
+$ mkdocs build
+```
