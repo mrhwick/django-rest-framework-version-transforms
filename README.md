@@ -1,7 +1,6 @@
 djangorestframework-version-transforms
 ======================================
 
-|build-status-image| |pypi-version|
 [![build-status-image](https://secure.travis-ci.org/mrhwick/django-rest-framework-version-transforms.svg?branch=master)](http://travis-ci.org/mrhwick/django-rest-framework-version-transforms?branch=master)
 [![pypi-version](https://img.shields.io/pypi/v/djangorestframework-version-transforms.svg)](https://pypi.python.org/pypi/djangorestframework-version-transforms)
 
