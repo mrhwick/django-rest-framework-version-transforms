@@ -28,7 +28,7 @@ $ pip install djangorestframework-version-transforms
 Example
 -------
 
-TODO: Write example.
+TODO: Write example here.
 
 Testing
 -------
