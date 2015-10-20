@@ -1,0 +1,4 @@
+site_name: djangorestframework-version-transforms
+site_description: A library to enable the use of delta transformations for versioning of Django Rest Framwork API representations.
+repo_url: https://github.com/mrhwick/django-rest-framework-version-transforms
+site_dir: html
