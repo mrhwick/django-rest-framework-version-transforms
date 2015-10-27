@@ -29,6 +29,6 @@ class BaseVersioningParser(JSONParser):
 
         if hasattr(request, 'version'):
             for transform in get_transform_classes(self.transform_base, base_version=request.version, reverse=False):
-                json_data_dict = transform.forwards(data=json_data_dict, request=request)
+                json_data_dict = transform().forwards(data=json_data_dict, request=request)
 
         return json_data_dict

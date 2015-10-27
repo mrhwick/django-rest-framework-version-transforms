@@ -29,6 +29,6 @@ class BaseVersioningSerializer(serializers.ModelSerializer):
                 # demote data until we've run the transform just above the requested version
 
                 for transform in get_transform_classes(self.transform_base, base_version=request.version, reverse=True):
-                    data = transform.backwards(data, request, instance)
+                    data = transform().backwards(data, request, instance)
 
         return data

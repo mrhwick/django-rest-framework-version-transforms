@@ -82,9 +82,11 @@ class VersioningParserUnitTests(TestCase):
         self.parser = TestParser()
         self.json_string = json.dumps(
             {
-                'test_field_one': 'test_one',
-                'test_field_two': 'test_two',
-                'test_field_three': 'test_three',
+                'test_field_one': 'value_one',
+                'test_field_two': 'value_two',
+                'test_field_three': 'value_three',
+                'test_field_four': 'value_four',
+                'test_field_five': 'value_five',
             },
         )
         self.json_string_data = io.BytesIO(str.encode(self.json_string))
@@ -124,7 +126,7 @@ class VersioningParserUnitTests(TestCase):
         )
         self.assertTrue(get_transform_classes_mock.called)
         get_transform_classes_mock.assert_called_once_with(
-            'test_transforms.TestModelTransform',
+            'tests.test_transforms.TestModelTransform',
             base_version=self.request.version,
             reverse=False,
         )
@@ -159,8 +161,8 @@ class VersioningParserUnitTests(TestCase):
         )
 
         self.json_string_data = io.BytesIO(str.encode(self.json_string))
-        self.assertTrue(transform_one.forwards.called)
-        transform_one.forwards.assert_called_once_with(
+        self.assertTrue(transform_one.return_value.forwards.called)
+        transform_one.return_value.forwards.assert_called_once_with(
             data=JSONParser().parse(
                 stream=self.json_string_data,
                 media_type='application/vnd.test.testtype+json',
@@ -171,11 +173,42 @@ class VersioningParserUnitTests(TestCase):
             request=self.request,
         )
 
-        self.assertTrue(transform_two.forwards.called)
-        transform_two.forwards.assert_called_once_with(
-            data=transform_one.forwards.return_value,
+        self.assertTrue(transform_two.return_value.forwards.called)
+        transform_two.return_value.forwards.assert_called_once_with(
+            data=transform_one.return_value.forwards.return_value,
             request=self.request,
         )
+
+
+class VersioningParserIntegrationTests(TestCase):
+    def setUp(self):
+        self.request = APIRequestFactory().get('')
+        self.request.version = 1
+        self.parser = TestParser()
+        self.json_string = json.dumps(
+            {
+                'test_field_one': 'value_one',
+                'test_field_two': 'value_two',
+                'test_field_three': 'value_three',
+                'test_field_four': 'value_four',
+                'test_field_five': 'value_five',
+            },
+        )
+        self.json_string_data = io.BytesIO(str.encode(self.json_string))
+
+    def test_parsing_does_forward_conversion(self):
+        data_dict = self.parser.parse(
+            stream=self.json_string_data,
+            media_type='application/vnd.test.testtype+json',
+            parser_context={
+                'request': self.request,
+            },
+        )
+        self.assertTrue('new_test_field' in data_dict)
+        self.assertEqual(data_dict['new_test_field'], 'value_one')
+        self.assertTrue('new_related_object_id_list' in data_dict)
+        self.assertEqual(data_dict['new_related_object_id_list'], [1, 2, 3, 4, 5])
+
 
 
 class VersioningSerializerUnitTests(TestCase):
@@ -222,15 +255,15 @@ class VersioningSerializerUnitTests(TestCase):
 
         self.serializer.to_representation(instance=instance)
 
-        self.assertTrue(transform_one.backwards.called)
-        transform_one.backwards.assert_called_once_with(
+        self.assertTrue(transform_one.return_value.backwards.called)
+        transform_one.return_value.backwards.assert_called_once_with(
             MatchingModelSerializer().to_representation(instance),
             self.request,
             instance,
         )
-        self.assertTrue(transform_two.backwards.called)
-        transform_two.backwards.assert_called_once_with(
-            transform_one.backwards.return_value,
+        self.assertTrue(transform_two.return_value.backwards.called)
+        transform_two.return_value.backwards.assert_called_once_with(
+            transform_one.return_value.backwards.return_value,
             self.request,
             instance,
         )
