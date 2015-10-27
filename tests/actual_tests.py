@@ -210,7 +210,6 @@ class VersioningParserIntegrationTests(TestCase):
         self.assertEqual(data_dict['new_related_object_id_list'], [1, 2, 3, 4, 5])
 
 
-
 class VersioningSerializerUnitTests(TestCase):
     def setUp(self):
         self.request = APIRequestFactory().get('')
