@@ -45,6 +45,8 @@ def pytest_configure():
         ),
     )
 
+    # python_files = ['tests.py']
+
     try:
         import oauth_provider  # NOQA
         import oauth2  # NOQA
