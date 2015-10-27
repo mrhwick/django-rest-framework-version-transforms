@@ -1,4 +1,3 @@
-from rest_framework.parsers import JSONParser
 from rest_framework_transforms.parsers import BaseVersioningParser
 
 

@@ -142,14 +142,7 @@ class VersioningParserUnitTests(TestCase):
         self.assertFalse(get_transform_classes_mock.called)
 
     @patch('rest_framework_transforms.parsers.get_transform_classes')
-    def test_to_representation_calls_backwards_on_transform_classes_with_instance(self, get_transform_classes_mock):
-        instance = TestModel(
-            test_field_one='test_one',
-            test_field_two='test_two',
-            test_field_three='test_three',
-            test_field_four='test_four',
-            test_field_five='test_five',
-        )
+    def test_parse_calls_forwards_on_transform_classes(self, get_transform_classes_mock):
         transform_one = MagicMock()
         transform_two = MagicMock()
         get_transform_classes_mock.return_value = [
