@@ -18,6 +18,6 @@ class BaseTransform(object):
         """
         Converts from the next version back to this transform's base version of the representation.
 
-        :return:
+        :returns: Dictionary with the correct structure for the base version of the representation.
         """
         raise NotImplementedError(".backwards() must be overridden.")
