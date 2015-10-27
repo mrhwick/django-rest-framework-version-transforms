@@ -3,8 +3,6 @@ import json
 from unittest import TestCase
 from rest_framework.parsers import JSONParser
 from rest_framework_transforms.utils import get_transform_classes
-from tests.test_parsers import TestParser
-from tests.test_transforms import TestModelTransform0001, TestModelTransform0002
 
 try:
     from unittest.mock import MagicMock, patch
@@ -13,7 +11,9 @@ except ImportError:
 from rest_framework.test import APIRequestFactory
 from rest_framework_transforms.exceptions import TransformBaseNotDeclaredException
 from tests.test_models import TestModel
+from tests.test_parsers import TestParser
 from tests.test_serializers import TestSerializer, MatchingModelSerializer
+from tests.test_transforms import TestModelTransform0001, TestModelTransform0002
 
 
 @patch('rest_framework_transforms.utils.inspect.getmembers')
