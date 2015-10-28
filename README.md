@@ -3,6 +3,7 @@ djangorestframework-version-transforms
 
 [![build-status-image](https://secure.travis-ci.org/mrhwick/django-rest-framework-version-transforms.svg?branch=master)](http://travis-ci.org/mrhwick/django-rest-framework-version-transforms?branch=master)
 [![pypi-version](https://img.shields.io/pypi/v/djangorestframework-version-transforms.svg)](https://pypi.python.org/pypi/djangorestframework-version-transforms)
+[![read-the-docs](https://readthedocs.org/projects/django-rest-framework-version-transforms/badge/?version=latest)](http://django-rest-framework-version-transforms.readthedocs.org/en/latest/?badge=latest)
 
 Overview
 --------
