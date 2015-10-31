@@ -8,15 +8,15 @@ class BaseTransform(object):
     """
     def forwards(self, data, request):
         """
-        Converts from this transform's base version to the next version of the representation.
+        Converts from this transform's base version to the targeted version of the representation.
 
-        :returns: Dictionary with the correct structure for the next version of the representation.
+        :returns: Dictionary with the correct structure for the targeted version of the representation.
         """
         raise NotImplementedError(".forwards() must be overridden.")
 
     def backwards(self, data, request, instance):
         """
-        Converts from the next version back to this transform's base version of the representation.
+        Converts from the targeted version back to this transform's base version of the representation.
 
         :returns: Dictionary with the correct structure for the base version of the representation.
         """
