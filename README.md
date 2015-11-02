@@ -8,7 +8,7 @@ djangorestframework-version-transforms
 Overview
 --------
 
-A library to enable the use of delta transformations for versioning of Django Rest Framwork API representations.
+A library to enable the use of delta transformations for versioning of [Django Rest Framework] API representations.
 
 ### Change is Inevitable
 
@@ -288,7 +288,7 @@ Run with runtests.
 $ ./runtests.py
 ```
 
-You can also use the excellent [tox](http://tox.readthedocs.org/en/latest/) testing tool to run the tests
+You can also use the excellent [tox] testing tool to run the tests
 against all supported versions of Python and Django. Install tox globally, and then simply run:
 
 ```bash
@@ -315,3 +315,6 @@ To build the documentation:
 ```bash
 $ mkdocs build
 ```
+
+[Django Rest Framework]: https://github.com/tomchristie/django-rest-framework
+[tox]: http://tox.readthedocs.org/en/latest/
