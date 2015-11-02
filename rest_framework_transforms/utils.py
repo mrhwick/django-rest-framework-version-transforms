@@ -28,7 +28,7 @@ def get_transform_classes(transform_base=None, base_version=1, reverse=False):
             transform_index_match = re.search('\d+$', name)
             if transform_index_match:
                 int_transform_index = int(transform_index_match.group(0))
-                if base_version <= int_transform_index:
+                if base_version < int_transform_index:
                     transform_classes_dict[int_transform_index] = transform_class
 
     ordered_transform_classes_list = [

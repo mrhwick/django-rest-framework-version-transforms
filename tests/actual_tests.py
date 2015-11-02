@@ -14,7 +14,7 @@ from rest_framework_transforms.exceptions import TransformBaseNotDeclaredExcepti
 from tests.models import TestModel, TestModelV3
 from tests.test_parsers import TestParser
 from tests.test_serializers import TestSerializer, MatchingModelSerializer, TestSerializerV3
-from tests.test_transforms import TestModelTransform0001, TestModelTransform0002
+from tests.test_transforms import TestModelTransform0002, TestModelTransform0003
 
 
 @patch('rest_framework_transforms.utils.inspect.getmembers')
@@ -27,52 +27,52 @@ class GetTransformClassesUnitTests(TestCase):
 
     def test_adds_transforms_to_list(self, import_module_mock, getmembers_mock):
         getmembers_mock.return_value = {
-            'TestModelTransform0001': TestModelTransform0001,
             'TestModelTransform0002': TestModelTransform0002,
+            'TestModelTransform0003': TestModelTransform0003,
         }.items()
         returned_classes = get_transform_classes(
             transform_base='some_package.some_module.TestModelTransform',
         )
-        self.assertEqual(TestModelTransform0001, returned_classes[0])
-        self.assertEqual(TestModelTransform0002, returned_classes[1])
+        self.assertEqual(TestModelTransform0002, returned_classes[0])
+        self.assertEqual(TestModelTransform0003, returned_classes[1])
         self.assertEqual(2, len(returned_classes))
 
     def test_adds_transforms_to_list_in_reverse_order(self, import_module_mock, getmembers_mock):
         getmembers_mock.return_value = {
-            'TestModelTransform0001': TestModelTransform0001,
             'TestModelTransform0002': TestModelTransform0002,
+            'TestModelTransform0003': TestModelTransform0003,
         }.items()
         returned_classes = get_transform_classes(
             transform_base='some_package.some_module.TestModelTransform',
             reverse=True,
         )
-        self.assertEqual(TestModelTransform0001, returned_classes[1])
-        self.assertEqual(TestModelTransform0002, returned_classes[0])
+        self.assertEqual(TestModelTransform0002, returned_classes[1])
+        self.assertEqual(TestModelTransform0003, returned_classes[0])
         self.assertEqual(2, len(returned_classes))
 
     def test_adds_only_transforms_matching_base_to_list(self, import_module_mock, getmembers_mock):
         getmembers_mock.return_value = {
-            'TestModelTransform0001': TestModelTransform0001,
-            'AnotherModelTransform0001': TestModelTransform0002,
+            'TestModelTransform0002': TestModelTransform0002,
+            'AnotherModelTransform0002': TestModelTransform0003,
         }.items()
         returned_classes = get_transform_classes(
             transform_base='some_package.some_module.TestModelTransform',
         )
-        self.assertEqual(TestModelTransform0001, returned_classes[0])
-        self.assertNotIn(TestModelTransform0002, returned_classes)
+        self.assertEqual(TestModelTransform0002, returned_classes[0])
+        self.assertNotIn(TestModelTransform0003, returned_classes)
         self.assertEqual(1, len(returned_classes))
 
     def test_adds_only_transforms_above_base_version_number_to_list(self, import_module_mock, getmembers_mock):
         getmembers_mock.return_value = {
-            'TestModelTransform0001': TestModelTransform0001,
             'TestModelTransform0002': TestModelTransform0002,
+            'TestModelTransform0003': TestModelTransform0003,
         }.items()
         returned_classes = get_transform_classes(
             transform_base='some_package.some_module.TestModelTransform',
             base_version=2,
         )
-        self.assertNotIn(TestModelTransform0001, returned_classes)
-        self.assertEqual(TestModelTransform0002, returned_classes[0])
+        self.assertNotIn(TestModelTransform0002, returned_classes)
+        self.assertEqual(TestModelTransform0003, returned_classes[0])
         self.assertEqual(1, len(returned_classes))
 
 

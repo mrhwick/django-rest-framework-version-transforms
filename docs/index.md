@@ -76,7 +76,7 @@ class BaseTransform(object):
         """
         Converts from this transform's base version to the next version of the representation.
 
-        :returns: Dictionary with the correct structure for the next version of the representation.
+        :returns: Dictionary with the correct structure for the targeted version of the representation.
         """
         raise NotImplementedError(".forwards() must be overridden.")
 
@@ -92,7 +92,7 @@ class BaseTransform(object):
 To create a transform that can be used for conversion, define a subclass of `BaseTransform`:
 
 ```python
-class TestModelTransform0001(BaseTransform):
+class TestModelTransform0002(BaseTransform):
     def forwards(self, data, request):
         if 'test_field_one' in data:
             data['new_test_field'] = data.get('test_field_one')
@@ -106,12 +106,12 @@ class TestModelTransform0001(BaseTransform):
 ```
 
 In this example transform, the `.forwards()` method would be used to change a v1 representation into a v2 representation by substituting a field key.
-This transform indicates that it will be used to convert from v1 to v2 by appending a numerical indicator of the version it is based upon, `0001`.
+This transform indicates that it will be used to convert from v1 to v2 by appending a numerical indicator of the version it is targeting, `0002`.
 
 To define a second transform that would enable conversion between a v2 and v3, we would simply use the same prefix with an incremented numerical indicator.
 
 ```python
-class TestModelTransform0002(BaseTransform):
+class TestModelTransform0003(BaseTransform):
     def forwards(self, data, request):
         data['new_related_object_id_list'] = [1, 2, 3, 4, 5]
         return data
@@ -121,12 +121,103 @@ class TestModelTransform0002(BaseTransform):
         return data
 ```
 
-Therefore, the second transform is indicating that it is based upon the version `0002`, and can convert forwards from a v2 to a v3 and backwards again from a v3 to a v2.
+Therefore, the second transform is indicating that it is targeting the version `0003`, and can convert forwards from a v2 to a v3 and backwards again from a v3 to a v2.
 In this second example transform, the `.forwards()` method adds a required field with default values onto the representation to maintain compatibility with version 3 of the endpoint code which requires that field.
 
 In both example transforms, the `.backwards()` method is used to convert a representation from the version above the base version down into the base version.
 In the first case, this means substituting the original key back into the representation, and removing the key from the v2 representation.
 In the second example, the `.backwards()` method would remove the field that is required by the v3 representation, since it was not expected in the v2 representation.
+
+
+#### Uniform vs. Per-Endpoint Versioning
+
+There are two schools of thought around versioning of resources within a REST API. 
+Uniform API versioning schemes increment the version of the entire API at once whenever one endpoint introduces an incompatible change.
+In contrast, Per-Endpoint API versioning allows demands that a client know the version number of each resource with which they interact.
+
+Per-Endpoint API versioning is convenient for development of the API itself, and would be the expected default for DRF-based API's.
+Each endpoint likely keeps a record of versioning independently of any other endpoints.
+If a uniform version number is desired, then endpoints will likely be 'pulled' forward into higher versions that are demanded by other endpoints.
+This 'pulling' would be, in practice, duplication of endpoint code from an older version of some endpoint to a newer version of the same endpoint.
+
+While per-endpoint versioning is convenient for maintenance of an API, uniform API versioning offers enormous convenience to client-side developers.
+
+Version transforms enable either versioning scheme without code duplication.
+Without additional work, per-endpoint versioning is supported.
+Transforms for each endpoint simply target incremental versions of their resources.
+
+For example, if you have two resources `User` and `Profile`:
+
+```python
+class ProfileTransform0002(BaseTransform:
+    """
+    Targets v2 of the profile representation.
+    Will convert forwards and backwards for requests at v1.
+    """
+
+class UserTransform0002(BaseTransform:
+    """
+    Targets v2 of the user representation.
+    Will convert forwards and backwards for requests at v1.
+    """
+
+class UserTransform0003(BaseTransform):
+    """
+    Targets v3 of the user representation.
+    Will convert forwards and backwards for requests at v1 or v2.
+    """
+
+class UserTransform0004(BaseTransform):
+    """
+    Targets v4 of the user representation.
+    Will convert forwards and backwards for requests at v1, v2, or v3.
+    """
+```
+
+In this example, the `User` and `Profile` resources are versioned independently from one another.
+`User` has a current version of `v4`, and `Profile` has a current version of `v2`.
+They both define the transforms necessary to maintain older versions.
+
+If API developers wish to support uniform versioning, this is also quite simple.
+In uniform versioning schemes, the transforms are created targeting the new uniform version which will include the new representation version.
+
+For example, if you again have two resources `User` and `Profile`:
+
+```python
+class ProfileTransform0002(BaseTransform:
+    """
+    Targets v2 of the profile representation.
+    Will convert forwards and backwards for requests at v1.
+    """
+
+class UserTransform0003(BaseTransform):
+    """
+    Targets v3 of the user representation.
+    Will convert forwards and backwards for requests at v1 or v2.
+    """
+
+class ProfileTransform0004(BaseTransform):
+    """
+    Targets v4 of the profile representation.
+    Will convert forwards and backwards for requests at v1, v2, or v3.
+    """
+
+class UserTransform0004(BaseTransform):
+    """
+    Targets v4 of the user representation.
+    Will convert forwards and backwards for requests at v1, v2, or v3.
+    """
+```
+
+In the uniform versioning example, each endpoint is responsible for 'opting-in' to have a new resource version by creating a transform that targets the incrementing uniform version.
+This API has a uniform version `v4`, and the `User` and `Profile` both 'opt-in' to make incompatible changes as a part of `v4` of the API.
+This means that they both define a transform to maintain versions below `v4`.
+
+Prior to the `v4` of this example API, there were other incompatible changes necessary, but only one of either `User` or `Profile` resources 'opted-in' to targeting the new uniform version.
+
+
+Using these simple patterns, API developers can decide to implement the versioning scheme which is most meaningful for their projects.
+
 
 ### Parsers
 

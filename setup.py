@@ -12,7 +12,7 @@ description = 'A library to enable the use of delta transformations for versioni
 url = 'https://github.com/mrhwick/django-rest-framework-version-transforms'
 author = 'Matt Hardwick'
 author_email = 'MatthewRHardwick@gmail.com'
-license = 'BSD'
+license = 'MIT'
 
 
 def get_version(package):
