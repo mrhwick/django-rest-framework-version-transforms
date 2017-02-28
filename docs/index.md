@@ -131,7 +131,7 @@ In the second example, the `.backwards()` method would remove the field that is 
 
 #### Uniform vs. Per-Endpoint Versioning
 
-There are two schools of thought around versioning of resources within a REST API. 
+There are two schools of thought around versioning of resources within a REST API.
 Uniform API versioning schemes increment the version of the entire API at once whenever one endpoint introduces an incompatible change.
 In contrast, Per-Endpoint API versioning allows demands that a client know the version number of each resource with which they interact.
 
@@ -149,13 +149,13 @@ Transforms for each endpoint simply target incremental versions of their resourc
 For example, if you have two resources `User` and `Profile`:
 
 ```python
-class ProfileTransform0002(BaseTransform:
+class ProfileTransform0002(BaseTransform):
     """
     Targets v2 of the profile representation.
     Will convert forwards and backwards for requests at v1.
     """
 
-class UserTransform0002(BaseTransform:
+class UserTransform0002(BaseTransform):
     """
     Targets v2 of the user representation.
     Will convert forwards and backwards for requests at v1.
@@ -184,7 +184,7 @@ In uniform versioning schemes, the transforms are created targeting the new unif
 For example, if you again have two resources `User` and `Profile`:
 
 ```python
-class ProfileTransform0002(BaseTransform:
+class ProfileTransform0002(BaseTransform):
     """
     Targets v2 of the profile representation.
     Will convert forwards and backwards for requests at v1.
