@@ -143,13 +143,13 @@ Transforms for each endpoint simply target incremental versions of their resourc
 For example, if you have two resources `User` and `Profile`:
 
 ```python
-class ProfileTransform0002(BaseTransform:
+class ProfileTransform0002(BaseTransform):
     """
     Targets v2 of the profile representation.
     Will convert forwards and backwards for requests at v1.
     """
 
-class UserTransform0002(BaseTransform:
+class UserTransform0002(BaseTransform):
     """
     Targets v2 of the user representation.
     Will convert forwards and backwards for requests at v1.
@@ -178,7 +178,7 @@ In uniform versioning schemes, the transforms are created targeting the new unif
 For example, if you again have two resources `User` and `Profile`:
 
 ```python
-class ProfileTransform0002(BaseTransform:
+class ProfileTransform0002(BaseTransform):
     """
     Targets v2 of the profile representation.
     Will convert forwards and backwards for requests at v1.
