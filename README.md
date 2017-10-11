@@ -125,7 +125,7 @@ In the second example, the `.backwards()` method would remove the field that is 
 
 #### Uniform vs. Per-Endpoint Versioning
 
-There are two schools of thought around versioning of resources within a REST API. 
+There are two schools of thought around versioning of resources within a REST API.
 Uniform API versioning schemes increment the version of the entire API at once whenever one endpoint introduces an incompatible change.
 In contrast, Per-Endpoint API versioning allows demands that a client know the version number of each resource with which they interact.
 
@@ -249,7 +249,14 @@ As a response representation is being prepared for transmission back to the clie
 To make use of transforms in serializers, define a subclass of `BaseVersioningSerializer`:
 
 ```python
-class TestSerializerV3(BaseVersioningSerializer):
+from rest_framework import serializers
+
+# using a plain serializer
+class FooSerializerV3(BaseVersioningSerializer, serializers.Serializer):
+    test_field_two = serializers.CharField()
+
+# using model serializer
+class TestSerializerV3(BaseVersioningSerializer, serializers.ModelSerializer):
     transform_base = 'tests.test_transforms.TestModelTransform'
 
     class Meta:

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from rest_framework import serializers
 from rest_framework_transforms.exceptions import TransformBaseNotDeclaredException
 from rest_framework_transforms.utils import get_transform_classes
 
 
-class BaseVersioningSerializer(serializers.ModelSerializer):
+class BaseVersioningSerializer(object):
     """
     A base class for serializers that automatically demote resource representations
     according to provided transform classes for the resource.

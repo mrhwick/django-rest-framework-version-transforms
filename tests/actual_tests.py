@@ -13,7 +13,9 @@ from rest_framework.test import APIRequestFactory
 from rest_framework_transforms.exceptions import TransformBaseNotDeclaredException
 from tests.models import TestModel, TestModelV3
 from tests.test_parsers import TestParser
-from tests.test_serializers import TestSerializer, MatchingModelSerializer, TestSerializerV3
+from tests.test_serializers import (
+    TestSerializer, MatchingSerializer, TestSerializerV3,
+    TestModelSerializer, MatchingModelSerializer, TestModelSerializerV3)
 from tests.test_transforms import TestModelTransform0002, TestModelTransform0003
 
 
@@ -216,6 +218,7 @@ class VersioningSerializerUnitTests(TestCase):
         self.request = APIRequestFactory().get('')
         self.request.version = 1
         self.serializer = TestSerializer(context={'request': self.request})
+        self.model_serializer = TestModelSerializer(context={'request': self.request})
 
     def test_to_representation_raises_error_when_no_transform_base_specified_with_instance(self):
         self.serializer.transform_base = None
@@ -257,7 +260,7 @@ class VersioningSerializerUnitTests(TestCase):
 
         self.assertTrue(transform_one.return_value.backwards.called)
         transform_one.return_value.backwards.assert_called_once_with(
-            MatchingModelSerializer().to_representation(instance),
+            MatchingSerializer().to_representation(instance),
             self.request,
             instance,
         )
@@ -278,7 +281,7 @@ class VersioningSerializerUnitTests(TestCase):
             test_field_five='test_five',
         )
         data = self.serializer.to_representation(instance=instance)
-        self.assertEqual(data, MatchingModelSerializer().to_representation(instance))
+        self.assertEqual(data, MatchingSerializer().to_representation(instance))
 
     def test_to_representation_returns_default_serialization_if_no_request_version(self):
         self.request = APIRequestFactory().get('')
@@ -291,11 +294,11 @@ class VersioningSerializerUnitTests(TestCase):
             test_field_five='test_five',
         )
         data = self.serializer.to_representation(instance=instance)
-        self.assertEqual(data, MatchingModelSerializer().to_representation(instance))
+        self.assertEqual(data, MatchingSerializer().to_representation(instance))
 
     def test_to_representation_returns_empty_serialization_if_no_instance(self):
         data = self.serializer.to_representation(instance=None)
-        self.assertEqual(data, MatchingModelSerializer().to_representation(None))
+        self.assertEqual(data, MatchingSerializer().to_representation(None))
 
     @patch('rest_framework_transforms.serializers.get_transform_classes')
     def test_to_representation_doesnt_get_transform_classes_without_instance(self, get_transform_classes_mock):
@@ -309,12 +312,95 @@ class VersioningSerializerUnitTests(TestCase):
         self.serializer.to_representation(instance=TestModel())
         self.assertFalse(get_transform_classes_mock.called)
 
+    @patch('rest_framework_transforms.serializers.get_transform_classes')
+    def test_model_to_representation_gets_transform_classes_with_instance(self, get_transform_classes_mock):
+        self.model_serializer.to_representation(instance=TestModel())
+        self.assertTrue(get_transform_classes_mock.called)
+        get_transform_classes_mock.assert_called_once_with(
+            'tests.test_transforms.TestModelTransform',
+            base_version=self.request.version,
+            reverse=True,
+        )
+
+    @patch('rest_framework_transforms.serializers.get_transform_classes')
+    def test_model_to_representation_calls_backwards_on_transform_classes_with_instance(self, get_transform_classes_mock):
+        instance = TestModel(
+            test_field_one='test_one',
+            test_field_two='test_two',
+            test_field_three='test_three',
+            test_field_four='test_four',
+            test_field_five='test_five',
+        )
+        transform_one = MagicMock()
+        transform_two = MagicMock()
+        get_transform_classes_mock.return_value = [
+            transform_one,
+            transform_two,
+        ]
+
+        self.model_serializer.to_representation(instance=instance)
+
+        self.assertTrue(transform_one.return_value.backwards.called)
+        transform_one.return_value.backwards.assert_called_once_with(
+            MatchingModelSerializer().to_representation(instance),
+            self.request,
+            instance,
+        )
+        self.assertTrue(transform_two.return_value.backwards.called)
+        transform_two.return_value.backwards.assert_called_once_with(
+            transform_one.return_value.backwards.return_value,
+            self.request,
+            instance,
+        )
+
+    def test_model_to_representation_returns_default_serialization_if_no_request(self):
+        self.model_serializer = TestModelSerializer(context={'request': None})
+        instance = TestModel(
+            test_field_one='test_one',
+            test_field_two='test_two',
+            test_field_three='test_three',
+            test_field_four='test_four',
+            test_field_five='test_five',
+        )
+        data = self.model_serializer.to_representation(instance=instance)
+        self.assertEqual(data, MatchingModelSerializer().to_representation(instance))
+
+    def test_model_to_representation_returns_default_serialization_if_no_request_version(self):
+        self.request = APIRequestFactory().get('')
+        self.model_serializer = TestModelSerializer(context={'request': self.request})
+        instance = TestModel(
+            test_field_one='test_one',
+            test_field_two='test_two',
+            test_field_three='test_three',
+            test_field_four='test_four',
+            test_field_five='test_five',
+        )
+        data = self.model_serializer.to_representation(instance=instance)
+        self.assertEqual(data, MatchingModelSerializer().to_representation(instance))
+
+    def test_model_to_representation_returns_empty_serialization_if_no_instance(self):
+        data = self.model_serializer.to_representation(instance=None)
+        self.assertEqual(data, MatchingModelSerializer().to_representation(None))
+
+    @patch('rest_framework_transforms.serializers.get_transform_classes')
+    def test_model_to_representation_doesnt_get_transform_classes_without_instance(self, get_transform_classes_mock):
+        self.model_serializer.to_representation(instance=None)
+        self.assertFalse(get_transform_classes_mock.called)
+
+    @patch('rest_framework_transforms.serializers.get_transform_classes')
+    def test_model_to_representation_doesnt_get_transform_classes_without_version(self, get_transform_classes_mock):
+        self.request = APIRequestFactory().get('')
+        self.model_serializer = TestModelSerializer(context={'request': self.request})
+        self.model_serializer.to_representation(instance=TestModel())
+        self.assertFalse(get_transform_classes_mock.called)
+
 
 class VersioningSerializerIntegrationTests(TestCase):
     def setUp(self):
         self.request = APIRequestFactory().get('')
         self.request.version = 1
         self.serializer = TestSerializerV3(context={'request': self.request})
+        self.model_serializer = TestModelSerializerV3(context={'request': self.request})
         self.instance = TestModelV3.objects.create(
             test_field_two='value_two',
             test_field_three='value_three',
@@ -348,6 +434,30 @@ class VersioningSerializerIntegrationTests(TestCase):
         self.request.version = 3
         self.serializer = TestSerializerV3(context={'request': self.request})
         data = self.serializer.to_representation(instance=self.instance)
+        self.assertFalse('test_field_one' in data)
+        self.assertTrue('new_related_object_id_list' in data)
+        self.assertEqual(data['new_related_object_id_list'], [1, 2, 3, 4])
+
+    @pytest.mark.django_db
+    def test_model_serialization_does_backwards_conversion_v3_to_v1(self):
+        data = self.model_serializer.to_representation(instance=self.instance)
+        self.assertTrue('test_field_one' in data)
+        self.assertEqual(data['test_field_one'], 'SOME TEST VALUE')
+        self.assertFalse('new_related_object_id_list' in data)
+
+    @pytest.mark.django_db
+    def test_model_serialization_does_backwards_conversion_v3_to_v2(self):
+        self.request.version = 2
+        self.model_serializer = TestModelSerializerV3(context={'request': self.request})
+        data = self.model_serializer.to_representation(instance=self.instance)
+        self.assertFalse('test_field_one' in data)
+        self.assertFalse('new_related_object_id_list' in data)
+
+    @pytest.mark.django_db
+    def test_model_serialization_does_nothing_on_v3_to_v3(self):
+        self.request.version = 3
+        self.model_serializer = TestModelSerializerV3(context={'request': self.request})
+        data = self.model_serializer.to_representation(instance=self.instance)
         self.assertFalse('test_field_one' in data)
         self.assertTrue('new_related_object_id_list' in data)
         self.assertEqual(data['new_related_object_id_list'], [1, 2, 3, 4])
