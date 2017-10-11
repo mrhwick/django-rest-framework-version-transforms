@@ -162,8 +162,12 @@ For example, assume you have two resources `User` and `Profile`.
 
 In the course of development, you must make several backwards incompatible changes over time:
 
+Some changes to the `Profile` endpoint:
+
 - v1 `Profile` - Some initial version of `Profile`.
 - v2 `Profile` - The `Profile` resource changes in some incompatible way.
+
+Some changes to the `User` endpoint:
 
 - v1 `User` - Some initial version of `User`.
 - v2 `User` - The `User` resource changes in some incompatible way.
