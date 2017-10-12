@@ -7,52 +7,42 @@
     </a>
 </div>
 
----
+djangorestframework-version-transforms
+======================================
 
-# djangorestframework-version-transforms
+# Overview
 
-A library to enable the use of delta transformations for versioning of [Django Rest Framework] API representations.
+A library to enable the use of functional transforms for versioning of [Django Rest Framework] API representations.
 
----
+## API Change Management - State of the Art
 
-## Overview
+Unfortunately for API developers, changes in API schema are inevitable for any significant web service.
 
-### Change is Inevitable
+If developers cannot avoid changing their API representations, then the next best option is to manage these changes without making sacrifices to software quality. Managing API changes often requires a developer to define and maintain multiple versions of resource representations for their API. Django Rest Framework makes some code quality sacrifices in its default support for version definition.
 
->Wouldn't it be nice if we only needed to design our API once?
+Using the default versioning support in DRF, API developers are required to manage version differences within their endpoint code. Forcing the responsibility of version compatibility into this layer of your API increases the complexity of endpoints. As the number of supported versions increases, the length, complexity, and duplication of version compatibility boilerplate will increase, leading to ever-increasing difficulty when making subsequent changes.
 
-Unfortunately for API developers, changes in API design are inevitable for many projects.
-If developers cannot avoid API change, then the next best option is to manage it without sacrificing software quality.
-Managing API change requires maintenance of multiple versions for our resource representations, but django rest framework sacrifices maintainability in its default versioning support.
+We can do better than duplicating code and maintaining ever-increasing boilerplate within our APIs.
 
-Using the default versioning support in DRF demands that endpoint code maintain the semantic differences between version of a representation.
-Forcing the responsibility of version compatibility onto the endpoint code results in endpoints that are hard to read and difficult to maintain.
-The length of version compatibility boilerplate code will increase as versions are created, and so will increasingly degrade the maintainability of the endpoint code.
+## Representation Version Transforms
 
-**There is a better way.**
+`djangorestframework-version-transforms` empowers DRF users to forgo the introduction of unecessary boilerplate into their endpoint code.
 
-### Representational Version Transforms
+Version compability is instead implemented as version transform functions that translate from one version of a resource to another. The general concept of a version transform should already be familiar to Django users, since it is derived from the frequently-used migration tool and uses similar patterns. Developers need only write version compatibility code once per version change, and need only maintain their endpoint code at the latest version.
 
-djangorestframework-version-transforms enables REST framework developers to remove version compatibility boilerplate from their endpoints.
-Developers need only write version compatibility once per version change, in the form of version transforms.
-Version transforms encapsulate the necessary changes to promote or demote a resource representation between versions.
-Endpoint logic can then only concern itself with the highest (or current) version of the resource, leading to great benefits in maintainability.
+Version transforms encapsulate the necessary changes to promote or demote a resource representation between versions, and a stack of version transforms can be used as a promotion or demotion pipeline when needed. With the correct stack of version transforms in place, endpoint logic should only be concerned with the latest (or current) version of the resource.
 
-Using version transforms enables API maintainers to make the necessary changes to endpoint logic that they want to make without worrying about the impact on version compatibility.
-
-### This Library
-
-This library aims to make maintenance of resource versions simple and intuitive for users of django rest framework by using version transforms to record incremental API changes separately from endpoint logic.
+When backwards incompatible changes are required, the endpoint can be upgraded to work against the new version. Then a single version transform is introduced that converts between the now outdated version and the newly created "current" version that the endpoint code expects.
 
 ## Requirements
 
-* Python (2.7, 3.3, 3.4)
-* Django (1.6, 1.7, 1.8)
-* Django REST Framework (2.4, 3.0, 3.1)
+-  Python (2.7, 3.4)
+-  Django (1.6, 1.7, 1.8)
+-  Django REST Framework (2.4, 3.0, 3.1)
 
 ## Installation
 
-Install using `pip`:
+Install using ```pip```...
 
 ```bash
 $ pip install djangorestframework-version-transforms
@@ -60,58 +50,39 @@ $ pip install djangorestframework-version-transforms
 
 ## Usage
 
-### Transforms
+### Creating Version Transforms
 
-Transforms are the classes that will be used to convert between versions of your representation during endpoint request handling.
-Transforms are expected to implement two methods which enable forward (request) and backward (response) compatibility between two versions of the representation:
+Transforms are defined as python subclasses of the `BaseTransform` class. They are expected to implement two methods (`forwards` and `backwards`) which describe the necessary transformations for forward (request) and backward (response) conversion between two versions of the resource. The base version number for a transform is appended to the name.
 
-```python
-class BaseTransform(object):
-    """
-    All transforms should extend 'BaseTransform', overriding the two
-    methods '.forwards()' and '.backwards()' to provide forwards and backwards
-    conversions between representation versions.
-    """
-    def forwards(self, data, request):
-        """
-        Converts from this transform's base version to the next version of the representation.
-
-        :returns: Dictionary with the correct structure for the targeted version of the representation.
-        """
-        raise NotImplementedError(".forwards() must be overridden.")
-
-    def backwards(self, data, request, instance):
-        """
-        Converts from the next version back to this transform's base version of the representation.
-
-        :returns: Dictionary with the correct structure for the base version of the representation.
-        """
-        raise NotImplementedError(".backwards() must be overridden.")
-```
-
-To create a transform that can be used for conversion, define a subclass of `BaseTransform`:
+For example:
 
 ```python
-class TestModelTransform0002(BaseTransform):
+# Notice that this is a subclass of the `BaseTransform` class
+class MyFirstTransform0001(BaseTransform):
+
+    # .forwards() is used to promote request data
     def forwards(self, data, request):
         if 'test_field_one' in data:
             data['new_test_field'] = data.get('test_field_one')
             data.pop('test_field_one')
         return data
 
+    # .backwards() is used to demote response data
     def backwards(self, data, request, instance):
         data['test_field_one'] = data.get('new_test_field')
         data.pop('new_test_field')
         return data
 ```
 
-In this example transform, the `.forwards()` method would be used to change a v1 representation into a v2 representation by substituting a field key.
-This transform indicates that it will be used to convert from v1 to v2 by appending a numerical indicator of the version it is targeting, `0002`.
+In this example transform, the `.forwards()` method would be used to change a v1 representation into a v2 representation by substituting the field key `new_test_field` for the previous key `test_field_one`. This transform indicates that it will be used to convert between v1 and v2 by appending a numerical indicator of the version it is based upon, `0001`, to the transform name. The `.backwards()` method simply does the swap operation in reverse, replacing the original field key that is expected in v1.
 
-To define a second transform that would enable conversion between a v2 and v3, we would simply use the same prefix with an incremented numerical indicator.
+To define a second transform that would enable conversion between a v2 and v3, we would simply use the same prefix and increment the base version number to `0002`.
 
 ```python
-class TestModelTransform0003(BaseTransform):
+# Again, subclassing `BaseTransform`.
+# The postfix integer indicates the base version.
+class MyFirstTransform0002(BaseTransform):
+
     def forwards(self, data, request):
         data['new_related_object_id_list'] = [1, 2, 3, 4, 5]
         return data
@@ -121,32 +92,94 @@ class TestModelTransform0003(BaseTransform):
         return data
 ```
 
-Therefore, the second transform is indicating that it is targeting the version `0003`, and can convert forwards from a v2 to a v3 and backwards again from a v3 to a v2.
-In this second example transform, the `.forwards()` method adds a required field with default values onto the representation to maintain compatibility with version 3 of the endpoint code which requires that field.
+In this second example transform, the `.forwards()` method adds a newly required field with some default values onto the representation. The `.backwards()` method simply removes the new field, since v2 does not require it.
 
-In both example transforms, the `.backwards()` method is used to convert a representation from the version above the base version down into the base version.
-In the first case, this means substituting the original key back into the representation, and removing the key from the v2 representation.
-In the second example, the `.backwards()` method would remove the field that is required by the v3 representation, since it was not expected in the v2 representation.
+### Whole-API vs. Per-Endpoint Versioning
 
+There are two general strategies for introducing new API versions, and this library supports either version strategy.
 
-#### Uniform vs. Per-Endpoint Versioning
+#### Whole-API Versioning
 
-There are two schools of thought around versioning of resources within a REST API.
-Uniform API versioning schemes increment the version of the entire API at once whenever one endpoint introduces an incompatible change.
-In contrast, Per-Endpoint API versioning allows demands that a client know the version number of each resource with which they interact.
+In the Whole-API versioning strategy, any backwards-incompatible change to any endpoint within the API introduces a new API version for all endpoints. Clients are expected to maintain knowledge of the various changes particular to any resources affected by a given version change.
 
-Per-Endpoint API versioning is convenient for development of the API itself, and would be the expected default for DRF-based API's.
-Each endpoint likely keeps a record of versioning independently of any other endpoints.
-If a uniform version number is desired, then endpoints will likely be 'pulled' forward into higher versions that are demanded by other endpoints.
-This 'pulling' would be, in practice, duplication of endpoint code from an older version of some endpoint to a newer version of the same endpoint.
+In this strategy, changes to resources will be bundled together as a new version alongside any unchanged resources.
 
-While per-endpoint versioning is convenient for maintenance of an API, uniform API versioning offers enormous convenience to client-side developers.
+Whole-API versioning offers convenience for client-side developers at runtime, since the client must only interact with one version of an API at a time. One drawback is that the client must be made to support all changes to endpoints included in each new version of the API.
 
-Version transforms enable either versioning scheme without code duplication.
-Without additional work, per-endpoint versioning is supported.
-Transforms for each endpoint simply target incremental versions of their resources.
+##### Usage
 
-For example, if you have two resources `User` and `Profile`:
+For example, assume you have two resources `User` and `Profile`.
+
+In the course of development, you must make several backwards incompatible changes over time:
+
+- v1 - Some initial version of `Profile` and `User`.
+- v2 - The `Profile` resource changes in some incompatible way.
+- v3 - The `User` resource changes in some incompatible way.
+- v4 - Both `Profile` and `User` resources change in some incompatible way at the same time.
+
+In order to support these version changes, you would define these transforms:
+
+```python
+class ProfileTransform0002(BaseTransform):
+    """
+    Targets v2 of the profile representation.
+    Will convert forwards and backwards for requests at v1.
+    """
+
+class UserTransform0003(BaseTransform):
+    """
+    Targets v3 of the user representation.
+    Will convert forwards and backwards for requests at v1 or v2.
+    """
+
+class ProfileTransform0004(BaseTransform):
+    """
+    Targets v4 of the profile representation.
+    Will convert forwards and backwards for requests at v1, v2, or v3.
+    """
+
+class UserTransform0004(BaseTransform):
+    """
+    Targets v4 of the user representation.
+    Will convert forwards and backwards for requests at v1, v2, or v3.
+    """
+```
+
+In the Whole-API strategy, each transform targets the version to which it promotes a resource. Using this pattern, the transforms "opt in" to a particular version number.
+
+In this example:
+
+- `ProfileTransform0002` targets `v2`.
+- `UserTransform0003` targets `v3`.
+- `ProfileTransform0004` and `UserTransform0004` both target `v4`.
+
+#### Per-Endpoint Versioning
+
+Per-Endpoint API versioning requires a client to maintain knowledge of the various versions of each endpoint. The client will access each endpoint at its associated version, and can expect to independently change the version number for each endpoint. This allows for finer-grained control for the client to manage which resource versions with which it expects to interact.
+
+In this strategy, changes to resources are made independently of each other. Unchanged resources stay at the same version number no matter how many new versions of other resources are created.
+
+Per-Endpoint versioning offers convenience for client developers in that they can improve a single resource interaction at a time. One major drawback of this strategy is that the client must maintain a mapping of which resource versions are to be used at runtime.
+
+##### Usage
+
+For example, assume you have two resources `User` and `Profile`.
+
+In the course of development, you must make several backwards incompatible changes over time:
+
+Some changes to the `Profile` endpoint:
+
+- v1 `Profile` - Some initial version of `Profile`.
+- v2 `Profile` - The `Profile` resource changes in some incompatible way.
+
+Some changes to the `User` endpoint:
+
+- v1 `User` - Some initial version of `User`.
+- v2 `User` - The `User` resource changes in some incompatible way.
+- v3 `User` - The `User` resource changes in some incompatible way.
+- v4 `User` - The `User` resource changes in some incompatible way.
+
+In order to support these versions, you would define these transforms:
 
 ```python
 class ProfileTransform0002(BaseTransform):
@@ -175,88 +208,58 @@ class UserTransform0004(BaseTransform):
 ```
 
 In this example, the `User` and `Profile` resources are versioned independently from one another.
-`User` has a current version of `v4`, and `Profile` has a current version of `v2`.
-They both define the transforms necessary to maintain older versions.
 
-If API developers wish to support uniform versioning, this is also quite simple.
-In uniform versioning schemes, the transforms are created targeting the new uniform version which will include the new representation version.
+The `User` resource supports `v1`, `v2`, `v3`, and `v4`. Three transforms are defined, with each stating their targeted version after promotion by the postfix integer in their names.
 
-For example, if you again have two resources `User` and `Profile`:
+The `Profile` resource supports `v1` and `v2`. One transform is defined to enable this support, and that transform states that it targets `v2` after promotion of the representation.
 
-```python
-class ProfileTransform0002(BaseTransform):
-    """
-    Targets v2 of the profile representation.
-    Will convert forwards and backwards for requests at v1.
-    """
-
-class UserTransform0003(BaseTransform):
-    """
-    Targets v3 of the user representation.
-    Will convert forwards and backwards for requests at v1 or v2.
-    """
-
-class ProfileTransform0004(BaseTransform):
-    """
-    Targets v4 of the profile representation.
-    Will convert forwards and backwards for requests at v1, v2, or v3.
-    """
-
-class UserTransform0004(BaseTransform):
-    """
-    Targets v4 of the user representation.
-    Will convert forwards and backwards for requests at v1, v2, or v3.
-    """
-```
-
-In the uniform versioning example, each endpoint is responsible for 'opting-in' to have a new resource version by creating a transform that targets the incrementing uniform version.
-This API has a uniform version `v4`, and the `User` and `Profile` both 'opt-in' to make incompatible changes as a part of `v4` of the API.
-This means that they both define a transform to maintain versions below `v4`.
-
-Prior to the `v4` of this example API, there were other incompatible changes necessary, but only one of either `User` or `Profile` resources 'opted-in' to targeting the new uniform version.
-
-
-Using these simple patterns, API developers can decide to implement the versioning scheme which is most meaningful for their projects.
-
+Using this strategy, the client-side interactions can target a different version for each of the resources independently from one another.
 
 ### Parsers
 
-Parsers are useful in django rest framework for defining content-types for your RESTful API resources.
+Parsers are useful in Django Rest Framework for defining content-types for your RESTful API resources.
 
-Using djangorestframework-version-transforms, custom parsers can also be used to ensure that the representation parsed out of a request match the latest version of that resource.
-This means that endpoint logic no longer needs to be aware of previous versions of a resource.
-Whenever a request is made at a previous resource version, the inbound representation will be converted into the latest version during the parsing operation.
+Using this library, custom parsers can also be used to ensure that the representation parsed out of a request match the latest version of that resource. This relieves the endpoint from the burden of maintaining knowledge of previous resource versions.
 
-To make use of version transforms in parsers, define a subclass of `BaseVersioningParser`:
+When using a custom parser, inbound representations at lower-than-latest versions will be converted into the latest version during parsing.
+
+To make use of version transforms in custom parsers, define a subclass of `BaseVersioningParser`:
 
 ```python
-class TestParser(BaseVersioningParser):
+# Notice that this is a subclass of the provided `BaseVersioningParser`
+class MyFirstVersioningParser(BaseVersioningParser):
     media_type = 'application/vnd.test.testtype+json'
-    transform_base = 'tests.test_transforms.TestModelTransform'
+    transform_base = 'my_version_transforms.MyFirstTransform'
 ```
 
-The `media_type` property must be defined, but can be defined simply as `application/json` if no custom content type is necessary.
+The `media_type` property must be defined, but can be defined simply as `application/json` if no custom content type is desired.
 
-With a `transform_base` defined, this serializer will automatically retrieve transform classes from the specified module that are prefixed with the base transform name.
+The `transform_base` property can be defined for use with this library. This parser will now automatically retrieve transform classes from the specified module that are prefixed with the base transform name.
 
-In this example, the full module name is `'tests.test_transforms'`, which indicates module from which the transform classes will be loaded.
-The base name in the example is `'TestModelTransform'`, which indicates the prefix for transform classes to be loaded from the module for use during conversion.
+In this example, the full module name is `'my_version_transforms'`, which indicates the module from which the transform classes will be loaded. The base transform name in this example is `'MyFirstTransform'`, which indicates a prefix to be used for pattern matching to find the version transforms associated with this parser.
 
-The VersioningParser will automatically run the `.forwards()` methods of each transform in ascending order, starting with the requested version.
-After this operation is complete, the parser will return the representation in the latest version for handling by the endpoint logic.
+The VersioningParser will automatically discover the transforms from the provided module that match the given base transform name. Then, the parser will use the version being requested to identify which transform to run first. The parser then creates a pipeline from the `.forwards()` methods of each later transform in ascending order. After this promotion pipeline is complete, the parser provides the request representation at the latest version for handling by the endpoint logic.
 
 ### Serializers
 
-Serializers are useful in django rest framework for returning consistent response representations to the requesting client.
+Serializers are useful in Django Rest Framework for consistently returning well-formated responses to the client.
 
-Using djangorestframework-version-transforms, custom serializers can also be used to ensure that the response representation matches the representation version which the client knows how to handle.
-As a response representation is being prepared for transmission back to the client, the outbound representaiton will be converted back down to the requested version during the serialization operation.
+Using this library, custom serializers can also be used to ensure that responses match the version which the client originally requested. A response representation is automatically demoted back to the requested version during serialization. This again relieves endpoints from the burden of maintaining knowledge of previous versions.
 
 To make use of transforms in serializers, define a subclass of `BaseVersioningSerializer`:
 
 ```python
-class TestSerializerV3(BaseVersioningSerializer):
-    transform_base = 'tests.test_transforms.TestModelTransform'
+from rest_framework import serializers
+
+# using a plain serializer
+class MyFirstVersioningSerializer(BaseVersioningSerializer, serializers.Serializer):
+    transform_base = 'my_version_transforms.MyFirstTransform'
+
+    test_field_two = serializers.CharField()
+
+# using model serializer
+class MyFirstVersioningSerializer(BaseVersioningSerializer, serializers.ModelSerializer):
+    transform_base = 'my_version_transforms.MyFirstTransform'
 
     class Meta:
         model = TestModelV3
@@ -270,13 +273,9 @@ class TestSerializerV3(BaseVersioningSerializer):
         )
 ```
 
-With a `transform_base` defined, this serializer will automatically retrieve transform classes from the specified module that are prefixed with the base name.
+The `transform_base` property is defined in the same manner as with parsers, using the first portions of the definition to identify from which module to load transforms, and the last part to identify the transforms to be used.
 
-In this example, the module name is `'tests.test_transforms'`, which indicates the module from which the transform classes will be loaded.
-The base name in the example is `'TestModelTransform'`, which indicates the prefix for transform classes to be loaded from the module for use during conversion.
-
-The VersioningSerializer will automatically run the `.backwards()` methods of each transform in descending order, ending with the transform that has the requested version as its base.
-After the conversion operation is complete, the serializer will return the representation in the version requested by the client.
+The versioning serializer will automatically discover the transforms from the provided module that match the base transform name. Then the serializer builds a pipeline of transforms to be used for demotion down to the requested version of the resource. The pipeline is run in sequence by executing the `.backwards()` methods on each transform in descending order until the requested version is reached.
 
 ## Development
 
@@ -294,7 +293,8 @@ Run with runtests.
 $ ./runtests.py
 ```
 
-You can also use the excellent [tox] testing tool to run the tests against all supported versions of Python and Django. Install tox globally, and then simply run:
+You can also use the excellent [tox] testing tool to run the tests
+against all supported versions of Python and Django. Install tox globally, and then simply run:
 
 ```bash
 $ tox
@@ -302,7 +302,7 @@ $ tox
 
 ### Documentation
 
-To build the documentation, you'll need to install `mkdocs`.
+To build the documentation, you’ll need to install ```mkdocs```.
 
 ```bash
 $ pip install mkdocs
